@@ -1,0 +1,17 @@
+{
+    "name": "Vue 3 Pokedex",
+    "build": {
+        "dockerfile": "Dockerfile"
+    },
+    "customizations": {
+        "vscode": {
+            "extensions": [
+                "Vue.volar",
+                "pkief.material-icon-theme",
+                "dbaeumer.vsconde-eslint"
+            ]
+        }
+    },
+    "forwardPorts": [5173],
+    "postCreateCommand": "npm install"
+}
