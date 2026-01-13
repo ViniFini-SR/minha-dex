@@ -47,12 +47,11 @@ defineEmits(['detalhar', 'carregarMais']);
 .grid-wrapper {
   display: flex;
   flex-direction: column;
-  /* 100vh = 100% da altura da janela. Subtraímos o espaço do título/busca */
-  height: calc(100vh - 180px); 
+  height: 100%;
   background: white;
   border-radius: 15px;
   border: 1px solid #eee;
-  overflow: hidden; /* Garante que nada vaze para fora do arredondamento */
+  overflow: hidden;
 }
 
 .list-header {
@@ -88,23 +87,19 @@ defineEmits(['detalhar', 'carregarMais']);
   border-radius: 12px;
   transition: all 0.2s ease;
 }
-
 .list-item:hover {
   background: #f1f3f5;
   transform: translateX(5px); /* Efeito visual de slide */
 }
-
 .list-item.active { 
   background: #e7f5ff;
   border-color: #228be6;
   box-shadow: 0 4px 6px rgba(0,0,0,0.05);
 }
-
 .pokemon-name {
   font-weight: 600;
   color: #495057;
 }
-
 .btn-load {
   width: 100%;
   margin-top: 20px;

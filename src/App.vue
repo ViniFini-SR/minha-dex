@@ -95,7 +95,7 @@ onMounted(bootstrapApp);
 
 <template>
   <div class="app-container">
-    <h1 class="titulo-principal">PokéDash do Finimon</h1>
+    <h1 class="titulo-principal">PokeDash do Finimon</h1>
 
     <SearchBar :colecao="pokemonNomes" @escolhido="exibirDetalhes" />
 
@@ -125,41 +125,43 @@ onMounted(bootstrapApp);
 </template>
 
 <style scoped>
-.titulo-principal {
-  text-align: center;
-  margin-top: 1px;
-  margin-bottom: 30px;
-  color: #2c3e50;
-}
 .app-container {
-  height: 100vh; /* Força o app a ter o tamanho exato da tela */
-  overflow: hidden; /* Impede que a página inteira tenha scroll */
+  font-family: sans-serif;
+  height: 100vh;
+  overflow: hidden;
   display: flex;
   flex-direction: column;
   padding: 20px;
   box-sizing: border-box;
 }
+
+.titulo-principal {
+  font-family: 'PokemonFont'; 
+  text-align: center;
+  margin-top: 1px;
+  margin-bottom: 30px;
+  font-size: 5rem; 
+  color: #ffcb05;
+  text-shadow: 
+    -2px -2px 0 #3b4cca, 
+     2px -2px 0 #3b4cca,
+    -2px  2px 0 #3b4cca,
+     2px  2px 0 #3b4cca;
+}
+
 .main-layout {
   display: flex;
-  flex-direction: row; /* Alinha os itens em linha */
-  gap: 30px;
-  max-width: 1200px;
-  margin: 0 auto;
-  align-items: flex-start; /* Alinha tudo no topo */
+  gap: 20px;
+  flex: 1;
+  min-height: 0;
+  width: 100%;
 }
 
-.left-panel {
-  flex: 1; /* Ocupa 1 parte do espaço */
-  min-width: 350px;
-}
-
-.right-panel {
-  flex: 1.5; /* Ocupa 1.5 partes (um pouco mais larga que a esquerda) */
-}
-
-.sticky-card {
-  position: sticky;
-  top: 20px; /* Faz o cartão "grudar" no topo enquanto você desce a lista */
+.left-panel, .right-panel {
+  flex: 1;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
 }
 
 .empty-state {

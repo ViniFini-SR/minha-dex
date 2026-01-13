@@ -1,4 +1,4 @@
-import type {Pokemon, PokemonListItem} from '../types/pokemon';
+import type {EvolutionChain, Pokemon, PokemonListItem, PokemonSpecies} from '../types/pokemon';
 
 /**
  * Função assíncrona para busca de Pokemon pelo ID ou Nome
@@ -27,7 +27,7 @@ export function getPokemonThumb(pokemonUrl: string): string {
 }
 
 /**
- * Função assíncrona para buscar uma lista de Pokemon
+ * Função para buscar uma lista de Pokemon
  * @param {number} limit
  * @returns {Promise<PokemonListItem>}
  */
@@ -40,8 +40,8 @@ export async function getPokemonList(limit = 20, offset = 0): Promise<PokemonLis
 }
 
 /**
- * Função assíncrona para buscar o nome de todos os Pokemons
-  * @returns {Promise<PokemonListItem>}
+ * Função para buscar o nome de todos os Pokemons
+ * @returns {Promise<PokemonListItem>}
  */
 export async function getAllPokemonNames(): Promise<PokemonListItem[]> {
     const metaResponse = await fetch(`https://pokeapi.co/api/v2/pokemon?limit=1`);
@@ -53,4 +53,27 @@ export async function getAllPokemonNames(): Promise<PokemonListItem[]> {
 
     const data = await response.json();
     return data.results;
+}
+
+/**
+ * Função para buscar as espécies do Pokemon
+ * @param {string} url
+ * @returns {Promise<PokemonSpecies>}
+ */
+export async function getPokemonSpecies(url: string): Promise<PokemonSpecies> {
+    const respose = await fetch(url);
+    if(!respose.ok) throw new Error('Erro ao buscar especie do Pokemon');
+    return await respose.json();
+}
+
+/**
+ * Função para buscar as evolucoes do Pokemon
+ * @param {string} url
+ * @returns {Promise<EvolutionChain>}
+ */
+export async function getEvolutionChain(url: string): Promise<EvolutionChain> {
+    const respose = await fetch(url);
+    if(!respose.ok) throw new Error('Erro ao buscar a linha evolutiva do Pokemon')
+    const data = await respose.json();
+    return data.chain;
 }
