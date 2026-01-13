@@ -1,96 +1,179 @@
 <script setup lang="ts">
-  import { ref, onMounted} from 'vue';
-  import { getPokemonList, getPokemon } from './services/api';
-  import type { Pokemon, PokemonListItem } from './types/pokemon';
-  import PokemonCard from './components/PokemonCard.vue';
+import { ref, onMounted } from 'vue';
+import { getPokemonList, getPokemon, getAllPokemonNames } from './services/api';
+import type { Pokemon, PokemonListItem } from './types/pokemon';
+
+// Componentes
+import PokemonCard from './components/PokemonCard.vue';
+import SearchBar from './components/SearchBar.vue';
+import PokemonGrid from './components/PokemonGrid.vue';
+
+// Estado Global da Aplicação
+const pokemons = ref<PokemonListItem[]>([]);
+const pokemonNomes = ref<PokemonListItem[]>([]);
+const pokemonSelecionado = ref<Pokemon | null>(null);
+const loading = ref(false);
+const offset = ref(0);
+const limit = 20;
+
+const cacheDetalhes = new Map<string, Pokemon>();
+
+// Função de Busca (Nossa "Stored Procedure" principal)
+async function bootstrapApp() {
+  if (loading.value) return;
+  loading.value = true;
   
-  const pokemons = ref<PokemonListItem[]>([]);
-  const pokemonSelecionado = ref<Pokemon | null>(null);
-  const loading = ref(false);
-  const offset = ref(0);
-  const error = ref<string | null> (null);
+  try {
+    // 1. Tenta recuperar o catálogo de nomes do LocalStorage (Cache em Disco)
+    const cacheKey = 'poke-names-cache';
+    const cachedNames = localStorage.getItem(cacheKey);
+    
+    let nomesCompletos: PokemonListItem[];
 
-  async function carregarPokemons() {
-    if (loading.value) return;
-
-    loading.value = true;
-    try {
-      const novosPokemons = await getPokemonList(undefined, offset.value);
-      pokemons.value = [...pokemons.value, ...novosPokemons];
-    } catch (err) {
-      error.value = "Falha na busca";
-    } finally {
-      loading.value = false;
+    if (cachedNames) {
+      // Se existe no disco, damos o "Parse" (deserialização)
+      nomesCompletos = JSON.parse(cachedNames);
+    } else {
+      // Se não, vamos buscar na API (I/O caro) e salvar no disco
+      nomesCompletos = await getAllPokemonNames();
+      localStorage.setItem(cacheKey, JSON.stringify(nomesCompletos));
     }
+
+    // 2. Busca a lista inicial paginada (Essa geralmente não cacheamos no disco para evitar dados obsoletos)
+    const listaInicial = await getPokemonList(limit, offset.value);
+
+    // 3. Popula os estados
+    pokemons.value = listaInicial;
+    pokemonNomes.value = nomesCompletos;
+    offset.value += limit;
+
+  } catch (err) {
+    console.error("Erro no Bootstrap:", err);
+  } finally {
+    loading.value = false;
+  }
+}
+
+// Função de Busca (Nossa "Stored Procedure" principal)
+async function fetchDados() {
+  if (loading.value) return;
+  loading.value = true;
+  try {
+    const novos = await getPokemonList(20, offset.value);
+    pokemons.value = [...pokemons.value, ...novos];
+    offset.value += limit;
+  } finally {
+    loading.value = false;
+  }
+}
+
+async function exibirDetalhes(nome: string) {
+  // ESTRATÉGIA: Cache-aside (Olha o cache primeiro, se não tiver, busca e guarda)
+  
+  // 1. Verifica se já temos o detalhe na memória
+  if (cacheDetalhes.has(nome)) {
+    // console.log(`Cache Hit: ${nome}`);
+    pokemonSelecionado.value = cacheDetalhes.get(nome)!;
+    return; 
   }
 
-  async function verDetalhes(name: string) {
-    try {
-      pokemonSelecionado.value = await getPokemon(name);
-    } catch (err) {
-      alert("Erro ao carregar detalhes")
-    }
+  try {
+    // console.log(`Cache Miss: ${nome}. Buscando na API...`);
+    const detalhe = await getPokemon(nome);
+    
+    // 2. Guarda no cache para a próxima vez
+    cacheDetalhes.set(nome, detalhe);
+    
+    pokemonSelecionado.value = detalhe;
+  } catch (err) {
+    alert("Erro ao buscar detalhes!");
   }
+}
 
-  onMounted(() => {carregarPokemons()});
+onMounted(bootstrapApp);
 </script>
 
 <template>
   <div class="app-container">
-    <h1 class="titulo-principal">Pokedex do Finimon</h1>
+    <h1 class="titulo-principal">PokéDash do Finimon</h1>
 
-    <div v-if="pokemonSelecionado" class="details-section">
-      <PokemonCard :pokemon="pokemonSelecionado" />
+    <SearchBar :colecao="pokemonNomes" @escolhido="exibirDetalhes" />
+
+    <div class="main-layout">
+      
+      <aside class="left-panel">
+        <div v-if="pokemonSelecionado" class="sticky-card">
+          <PokemonCard :pokemon="pokemonSelecionado" />
+        </div>
+        <div v-else class="empty-state">
+          Selecione um Pokémon para ver os detalhes
+        </div>
+      </aside>
+
+      <main class="right-panel">
+        <PokemonGrid 
+          :lista="pokemons" 
+          :carregando="loading"
+          :selecionadoNome="pokemonSelecionado?.name"
+          @detalhar="exibirDetalhes"
+          @carregarMais="fetchDados"
+        />
+      </main>
+
     </div>
-
-    <div v-if="loading">Carregando dados...</div>
-
-    <div class="pokemon-grid" v-else>
-      <div 
-        v-for="p in pokemons" 
-        :key="p.name" 
-        class="list-item"
-      >
-        <span>{{ p.name.toUpperCase() }}</span>
-        <button @click="verDetalhes(p.name)">Ver Detalhes</button>
-      </div>
-    </div>
-
-    <div class="actions">
-      <button
-        @click="carregarPokemons"
-        :disabled="loading"
-      >
-        {{ loading ? 'Carregando...' : "Carregar mais" }}
-      </button>
-    </div>
-
   </div>
 </template>
 
 <style scoped>
-  .titulo-principal {
-    text-align: center;
-    margin-top: 20px;
-    margin-bottom: 30px;
-    color: #2c3e50; /* Um cinza escuro profissional */  }
-  .pokemon-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-    gap: 10px;
-    margin-bottom: 30px;
+.titulo-principal {
+  text-align: center;
+  margin-top: 1px;
+  margin-bottom: 30px;
+  color: #2c3e50;
+}
+.app-container {
+  height: 100vh; /* Força o app a ter o tamanho exato da tela */
+  overflow: hidden; /* Impede que a página inteira tenha scroll */
+  display: flex;
+  flex-direction: column;
+  padding: 20px;
+  box-sizing: border-box;
+}
+.main-layout {
+  display: flex;
+  flex-direction: row; /* Alinha os itens em linha */
+  gap: 30px;
+  max-width: 1200px;
+  margin: 0 auto;
+  align-items: flex-start; /* Alinha tudo no topo */
+}
+
+.left-panel {
+  flex: 1; /* Ocupa 1 parte do espaço */
+  min-width: 350px;
+}
+
+.right-panel {
+  flex: 1.5; /* Ocupa 1.5 partes (um pouco mais larga que a esquerda) */
+}
+
+.sticky-card {
+  position: sticky;
+  top: 20px; /* Faz o cartão "grudar" no topo enquanto você desce a lista */
+}
+
+.empty-state {
+  padding: 40px;
+  text-align: center;
+  border: 2px dashed #ccc;
+  border-radius: 20px;
+  color: #999;
+}
+
+@media (max-width: 800px) {
+  /* Se a tela for pequena (celular), volta a ficar um embaixo do outro */
+  .main-layout {
+    flex-direction: column;
   }
-  .list-item {
-    border: 1px solid #eee;
-    padding: 10px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-  }
-  .details-section {
-    display: flex;
-    justify-content: center;
-    padding: 20px;
-    background: #f9f9f9;
-  }
+}
 </style>
