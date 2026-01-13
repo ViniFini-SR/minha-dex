@@ -45,13 +45,18 @@ defineEmits(['detalhar', 'carregarMais']);
 
 <style scoped>
 .grid-wrapper {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
   display: flex;
   flex-direction: column;
-  height: 100%;
   background: white;
   border-radius: 15px;
   border: 1px solid #eee;
   overflow: hidden;
+  min-height: 100vh;
 }
 
 .list-header {

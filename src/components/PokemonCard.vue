@@ -62,6 +62,10 @@ async function buscarDadosEvolucao() {
     carregandoEvo.value = false;
   }
 }
+
+const emit = defineEmits<{
+  (e: 'selecionar', nome: string): void
+}>();
 </script>
 
 <template>
@@ -95,7 +99,27 @@ async function buscarDadosEvolucao() {
     <div class="info-content">
       <h2>{{ pokemon.name.toUpperCase() }}</h2>
       
+      <div class="evolution-section">
+        <h3>Linha de Evolução</h3>
+        <div class="evo-chain">
+          <div 
+            v-for="(evo, index) in evolucoes" 
+            :key="evo.name" 
+            class="evo-item"
+            :class="{ 'clickable': evo.name !== pokemon.name }"
+            @click="evo.name !== pokemon.name && $emit('selecionar', evo.name)"
+          >
+            <img :src="getPokemonThumb(evo.url)" :alt="evo.name" />
+            <span :class="{ 'current-evo': evo.name === pokemon.name }">
+              {{ evo.name.toUpperCase() }}
+            </span>
+            <span v-if="index < evolucoes.length - 1" class="arrow">→</span>
+          </div>
+        </div>
+      </div>
+
       <div class="stats">
+        <h3>Status</h3>
         <div v-for="s in pokemon.stats" :key="s.stat.name" class="stat-row">
           <label>{{ s.stat.name.replace('special-', 'sp. ') }}</label>
           <div class="bar-bg">
@@ -105,19 +129,6 @@ async function buscarDadosEvolucao() {
         </div>
       </div>
 
-      <div class="evolution-section">
-        <h3>Linha de Evolução</h3>
-        <div v-if="carregandoEvo" class="loading-evo">A carregar...</div>
-        <div v-else class="evo-chain">
-          <div v-for="(evo, index) in evolucoes" :key="evo.name" class="evo-item">
-            <img :src="getPokemonThumb(evo.url)" :alt="evo.name" />
-            <span :class="{ 'current-evo': evo.name === pokemon.name }">
-              {{ evo.name.toUpperCase() }}
-            </span>
-            <span v-if="index < evolucoes.length - 1" class="arrow">→</span>
-          </div>
-        </div>
-      </div>
     </div>
   </div>
 </template>
@@ -128,12 +139,8 @@ async function buscarDadosEvolucao() {
   border-radius: 20px;
   box-shadow: 0 10px 25px rgba(0,0,0,0.1);
   padding: 20px;
-  width: 100%;
-  height: 100%;
   display: flex;
   flex-direction: column;
-  box-sizing: border-box;
-  overflow: hidden;
 }
 .image-stage {
   height: 320px;
@@ -173,16 +180,13 @@ async function buscarDadosEvolucao() {
 .bar-bg { flex: 1; background: #eee; height: 10px; border-radius: 3px; }
 .bar-fill { background: #228be6; height: 100%; border-radius: 3px; }
 .info-content {
-  flex: 1;
-  overflow-y: auto;
-  padding: 10px;
+  padding: 10px
 }
 
 .evolution-section {
-  margin-top: 25px;
-  padding: 15px;
-  background: #f8f9fa;
-  border-radius: 12px;
+  flex: 1;
+  overflow-y: auto;
+  padding: 10px;
 }
 
 .evo-chain {
@@ -200,12 +204,12 @@ async function buscarDadosEvolucao() {
 }
 
 .evo-item img {
-  width: 50px;
-  height: 50px;
+  width: 100%;
+  height: 100%;
 }
 
 .evo-item span {
-  font-size: 0.75rem;
+  font-size: 1rem;
   font-weight: bold;
   color: #666;
 }
@@ -219,5 +223,13 @@ async function buscarDadosEvolucao() {
   font-size: 1.2rem;
   color: #ccc;
   margin: 0 5px;
+}
+
+.evo-item.clickable {
+  cursor: pointer;
+  transition: transform 0.2s;
+}
+.evo-item.clickable:hover {
+  transform: scale(1.1);
 }
 </style>

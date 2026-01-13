@@ -83,7 +83,6 @@ async function exibirDetalhes(nome: string) {
     
     // 2. Guarda no cache para a próxima vez
     cacheDetalhes.set(nome, detalhe);
-    
     pokemonSelecionado.value = detalhe;
   } catch (err) {
     alert("Erro ao buscar detalhes!");
@@ -103,7 +102,7 @@ onMounted(bootstrapApp);
       
       <aside class="left-panel">
         <div v-if="pokemonSelecionado" class="sticky-card">
-          <PokemonCard :pokemon="pokemonSelecionado" />
+          <PokemonCard :pokemon="pokemonSelecionado" @selecionar="exibirDetalhes"/>
         </div>
         <div v-else class="empty-state">
           Selecione um Pokémon para ver os detalhes
@@ -126,9 +125,8 @@ onMounted(bootstrapApp);
 
 <style scoped>
 .app-container {
+  min-height: 100vh;
   font-family: sans-serif;
-  height: 100vh;
-  overflow: hidden;
   display: flex;
   flex-direction: column;
   padding: 20px;
@@ -151,17 +149,21 @@ onMounted(bootstrapApp);
 
 .main-layout {
   display: flex;
-  gap: 20px;
-  flex: 1;
-  min-height: 0;
+  flex-direction: row;
+  gap: 30px;
+  margin: 0 auto;
+  align-items: stretch;
   width: 100%;
 }
 
-.left-panel, .right-panel {
+.left-panel {
   flex: 1;
-  height: 100%;
-  display: flex;
-  flex-direction: column;
+  min-width: 350px;
+}
+
+.right-panel {
+  flex: 1;
+  position: relative
 }
 
 .empty-state {
